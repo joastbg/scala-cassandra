@@ -22,6 +22,8 @@ import me.prettyprint.hector.api.query.QueryResult
 import me.prettyprint.hector.api.Cluster
 import me.prettyprint.hector.api.Keyspace
 
+import me.prettyprint.hom.EntityManagerImpl
+
 /**
  * Cassandra wrapper using Hector
  * Works with scala 2.10.0
@@ -37,8 +39,9 @@ class CassandraWrapper {
 
 	private val cluster: Cluster = HFactory.getOrCreateCluster(clusterName, hostIp)
 	private val keyspace: Keyspace = HFactory.createKeyspace(keyspaceName, cluster)
-	private val template = new ThriftColumnFamilyTemplate[String, String](keyspace, columnFamilyName,
-																										StringSerializer.get(), StringSerializer.get())
+	private val template = new ThriftColumnFamilyTemplate[String, String](keyspace, columnFamilyName, StringSerializer.get(), StringSerializer.get())
+
+	private implicit def entityManager(implicit ks: Keyspace) = new EntityManagerImpl(ks, "net.joastbg.testing")
 
 	// Makes extraction of optional fields easier
 	implicit def enrichValueExtraction(value: String) = new AnyRef {
@@ -83,5 +86,28 @@ class CassandraWrapper {
 			val res: ColumnFamilyResult[String, String] = template.queryColumns(key)
 			res.getColumnNames.map(f => f -> res.getString(f)).toMap
 		case _ => Map()
+	}
+}
+
+object TestApplication extends CassandraWrapper {
+
+	def main(args: Array[String]) {
+		
+		// TODO: Make this nicer
+		implicit def entityManager(implicit ks: Keyspace) = new EntityManagerImpl(ks, "net.joastbg.testing")
+		implicit def em: EntityManagerImpl = entityManager(keyspace)
+
+		// TODO: Create keyspace, create column-family
+
+		val phoneNr = new PhoneNumber
+		phoneNr.kind = "home"
+		phoneNr.number = "212 555-1234"
+
+		phoneNr.save()
+
+		PhoneNumber.find(phoneNr.id) match {
+			case Some(nr) => println("Found number: " + nr.number)
+			case _ => println("Nothing found")
+		}
 	}
 }

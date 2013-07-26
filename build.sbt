@@ -15,7 +15,9 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "me.prettyprint" 		 % "hector-core" 			% "1.0-5"
+  "me.prettyprint" 		 % "hector-core" 			% "1.0-5",
+  "me.prettyprint" 		 % "hector-object-mapper" 	% "1.0-05",
+  "javax.persistence" 	 % "persistence-api" 		% "1.0"
 )
 
 parallelExecution in Test := false

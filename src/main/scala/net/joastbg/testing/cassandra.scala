@@ -34,7 +34,7 @@ class CassandraWrapper {
 
 	private val clusterName = "Test Cluster"
 	private val hostIp = "localhost:9160"
-	private val keyspaceName = "demo"
+	private val keyspaceName = "raptortesting"
 	private val columnFamilyName = "tenants"
 
 	private val cluster: Cluster = HFactory.getOrCreateCluster(clusterName, hostIp)
@@ -87,27 +87,39 @@ class CassandraWrapper {
 			res.getColumnNames.map(f => f -> res.getString(f)).toMap
 		case _ => Map()
 	}
-}
 
-object TestApplication extends CassandraWrapper {
-
-	def main(args: Array[String]) {
+	def runDemo() {
 		
-		// TODO: Make this nicer
 		implicit def entityManager(implicit ks: Keyspace) = new EntityManagerImpl(ks, "net.joastbg.testing")
 		implicit def em: EntityManagerImpl = entityManager(keyspace)
 
-		// TODO: Create keyspace, create column-family
+		def cfDef: ColumnFamilyDefinition = HFactory.createColumnFamilyDefinition(keyspaceName, "PhoneNumber");
+    	cluster.addColumnFamily(cfDef);
 
-		val phoneNr = new PhoneNumber
-		phoneNr.kind = "home"
-		phoneNr.number = "212 555-1234"
+		//val phoneNr = new PhoneNumber
+		//phoneNr.kind = "home"
+		//phoneNr.number = "212 555-1234"
 
-		phoneNr.save()
+		//phoneNr.save()
 
 		PhoneNumber.find(phoneNr.id) match {
 			case Some(nr) => println("Found number: " + nr.number)
 			case _ => println("Nothing found")
 		}
+	}
+}
+
+object TestApplication extends CassandraWrapper {
+
+	def main(args: Array[String]) {
+
+		// TODO: Make this nicer
+		//implicit def entityManager(implicit ks: Keyspace) = new EntityManagerImpl(ks, "net.joastbg.testing")
+		//implicit def em: EntityManagerImpl = entityManager(keyspace)
+
+		// TODO: Create keyspace, create column-family
+
+		TestApplication.runDemo();
+		
 	}
 }
